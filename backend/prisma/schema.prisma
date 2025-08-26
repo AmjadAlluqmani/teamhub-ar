@@ -1,0 +1,177 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  active    Boolean  @default(true)
+
+  projectsOwned Project[] @relation("OwnerProjects")
+  projectMembers ProjectMember[]
+  messages      Message[]
+  tasks         Task[]      @relation("UserTasks")
+  notifications Notification[]
+}
+
+enum Role {
+  admin
+  moderator
+  member
+  guest
+}
+
+model Invite {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  email     String?
+  rolePreset Role
+  expiresAt DateTime?
+  used      Boolean  @default(false)
+  createdBy String
+  createdAt DateTime @default(now())
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  visibility  Visibility
+  owner       User     @relation("OwnerProjects", fields: [ownerId], references: [id])
+  ownerId     String
+  tags        String[]
+  techStack   String[]
+  coverImage  String?
+  coverVideo  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     ProjectMember[]
+  files       File[]
+  messages    Message[]
+  tasks       Task[]
+  checklists  Checklist[]
+}
+
+enum Visibility {
+  personal_private
+  personal_public
+  group_private
+  group_public
+}
+
+model ProjectMember {
+  id         String  @id @default(cuid())
+  project    Project @relation(fields: [projectId], references: [id])
+  projectId  String
+  user       User    @relation(fields: [userId], references: [id])
+  userId     String
+  roleInProject String
+  addedBy    String
+  createdAt  DateTime @default(now())
+}
+
+model File {
+  id            String   @id @default(cuid())
+  project       Project  @relation(fields: [projectId], references: [id])
+  projectId     String
+  path          String
+  kind          String
+  latestVersion Int      @default(1)
+  createdBy     String
+  createdAt     DateTime @default(now())
+  versions      FileVersion[]
+}
+
+model FileVersion {
+  id        String  @id @default(cuid())
+  file      File    @relation(fields: [fileId], references: [id])
+  fileId    String
+  version   Int
+  storageUrl String
+  size      Int
+  hash      String
+  createdBy String
+  createdAt DateTime @default(now())
+  comments  CodeComment[]
+}
+
+model CodeComment {
+  id           String   @id @default(cuid())
+  fileVersion  FileVersion @relation(fields: [fileVersionId], references: [id])
+  fileVersionId String
+  lineStart    Int
+  lineEnd      Int
+  body         String
+  authorId     String
+  resolved     Boolean @default(false)
+  resolvedBy   String?
+  createdAt    DateTime @default(now())
+  resolvedAt   DateTime?
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId String
+  channel   String
+  body      String
+  attachments String[]
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  replyToId String?
+  createdAt DateTime @default(now())
+}
+
+model Checklist {
+  id        String   @id @default(cuid())
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId String
+  title     String
+  progress  Int      @default(0)
+  items     ChecklistItem[]
+}
+
+model ChecklistItem {
+  id          String   @id @default(cuid())
+  checklist   Checklist @relation(fields: [checklistId], references: [id])
+  checklistId String
+  title       String
+  done        Boolean  @default(false)
+  assigneeId  String?
+  doneAt      DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model Task {
+  id        String   @id @default(cuid())
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId String
+  title     String
+  status    String   @default("todo")
+  assignee  User?    @relation("UserTasks", fields: [assigneeId], references: [id])
+  assigneeId String?
+  dueDate   DateTime?
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  type      String
+  payload   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

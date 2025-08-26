@@ -1,0 +1,1 @@
+export default ()=>(<div className='prose max-w-none'><h1>عن الفريق</h1><p>فريق تقني متخصص.</p></div>);
