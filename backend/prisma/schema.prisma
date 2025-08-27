@@ -11,7 +11,7 @@ model User {
   name      String
   email     String   @unique
   password  String
-  role      Role
+  role      String
   avatarUrl String?
   createdAt DateTime @default(now())
   active    Boolean  @default(true)
@@ -23,19 +23,13 @@ model User {
   notifications Notification[]
 }
 
-enum Role {
-  admin
-  moderator
-  member
-  guest
-}
 
 model Invite {
   id        String   @id @default(cuid())
   code      String   @unique
   name      String
   email     String?
-  rolePreset Role
+  rolePreset String
   expiresAt DateTime?
   used      Boolean  @default(false)
   createdBy String
@@ -47,11 +41,11 @@ model Project {
   slug        String   @unique
   title       String
   description String
-  visibility  Visibility
+  visibility  String
   owner       User     @relation("OwnerProjects", fields: [ownerId], references: [id])
   ownerId     String
-  tags        String[]
-  techStack   String[]
+  tags        String?
+  techStack   String?
   coverImage  String?
   coverVideo  String?
   createdAt   DateTime @default(now())
@@ -64,12 +58,6 @@ model Project {
   checklists  Checklist[]
 }
 
-enum Visibility {
-  personal_private
-  personal_public
-  group_private
-  group_public
-}
 
 model ProjectMember {
   id         String  @id @default(cuid())
@@ -127,7 +115,7 @@ model Message {
   projectId String
   channel   String
   body      String
-  attachments String[]
+  attachments String?
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String
   replyToId String?

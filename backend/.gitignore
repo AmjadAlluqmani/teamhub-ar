@@ -1,0 +1,14 @@
+# dependencies
+node_modules/
+
+# env & local data
+.env
+prisma/dev.db
+prisma/*.db-journal
+uploads/
+data/
+tmp/
+
+# build/cache
+dist/
+coverage/
